@@ -1,0 +1,336 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Mi Asistencia Laboral</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 15px;
+    font-family: Arial, sans-serif;
+    background: #E6D5F5;
+    color: #44265F;
+}
+
+.contenedor {
+    max-width: 430px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 22px;
+    box-shadow: 0 5px 20px #9673B555;
+}
+
+header {
+    background: #A66BD4;
+    color: white;
+    text-align: center;
+    padding: 22px 10px;
+    border-radius: 18px;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 23px;
+    margin: 0;
+}
+
+header p {
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+h2 {
+    font-size: 19px;
+    color: #8244AF;
+}
+
+label {
+    display: block;
+    margin-top: 13px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+input, select {
+    width: 100%;
+    padding: 13px;
+    margin-top: 6px;
+    border: 1px solid #D3B5E9;
+    border-radius: 10px;
+    font-size: 15px;
+    background: #FCF9FF;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 12px;
+    background: #A66BD4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:active {
+    background: #8244AF;
+}
+
+.secundario {
+    background: #DCC2F0;
+    color: #44265F;
+}
+
+.tarjeta {
+    background: #F5EDFC;
+    padding: 14px;
+    margin-top: 15px;
+    border-radius: 12px;
+}
+
+.tarjeta p {
+    margin: 7px 0;
+    font-size: 14px;
+}
+
+.estado {
+    font-weight: bold;
+    color: #8244AF;
+}
+
+.eliminar {
+    background: #D95D83;
+    padding: 9px;
+    font-size: 13px;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #8866A3;
+}
+</style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+<header>
+    <h1>💜 MI ASISTENCIA</h1>
+    <p>Control de asistencia laboral</p>
+    <p>De lunes a viernes</p>
+</header>
+
+<h2>📝 Registrar asistencia</h2>
+
+<label>Nombre del trabajador</label>
+<input type="text" id="nombre"
+placeholder="Escribe tu nombre">
+
+<label>Fecha</label>
+<input type="date" id="fecha">
+
+<label>Hora de entrada</label>
+<input type="time" id="entrada">
+
+<label>Hora de salida</label>
+<input type="time" id="salida">
+
+<label>Estado de asistencia</label>
+<select id="estado">
+    <option value="Presente">Presente</option>
+    <option value="Tardanza">Tardanza</option>
+    <option value="Falta">Falta</option>
+</select>
+
+<button onclick="registrar()">
+    💜 GUARDAR ASISTENCIA
+</button>
+
+<button class="secundario"
+onclick="limpiar()">
+    Limpiar formulario
+</button>
+
+<h2>📋 Historial de asistencia</h2>
+
+<label>Buscar trabajador</label>
+<input type="text" id="buscar"
+placeholder="Buscar por nombre..."
+oninput="mostrar()">
+
+<div id="historial"></div>
+
+<footer>
+    Mi aplicación de asistencia laboral 💜
+</footer>
+
+</div>
+
+<script>
+
+// Cargar registros guardados
+let registros = JSON.parse(
+    localStorage.getItem("misAsistencias")
+) || [];
+
+// Fecha actual
+document.getElementById("fecha").value =
+    new Date().toLocaleDateString("en-CA");
+
+// Registrar asistencia
+function registrar() {
+
+    let nombre = document.getElementById("nombre").value.trim();
+    let fecha = document.getElementById("fecha").value;
+    let entrada = document.getElementById("entrada").value;
+    let salida = document.getElementById("salida").value;
+    let estado = document.getElementById("estado").value;
+
+    if (nombre === "" || fecha === "") {
+        alert("Completa el nombre y la fecha");
+        return;
+    }
+
+    let dia = new Date(fecha + "T12:00:00").getDay();
+
+    if (dia === 0 || dia === 6) {
+        alert("Solo puedes registrar de lunes a viernes");
+        return;
+    }
+
+    let repetido = registros.some(r =>
+        r.nombre.toLowerCase() === nombre.toLowerCase()
+        && r.fecha === fecha
+    );
+
+    if (repetido) {
+        alert("Ya existe una asistencia para ese trabajador en esta fecha");
+        return;
+    }
+
+    registros.push({
+        id: Date.now(),
+        nombre: nombre,
+        fecha: fecha,
+        entrada: entrada,
+        salida: salida,
+        estado: estado
+    });
+
+    guardar();
+    mostrar();
+    limpiar();
+
+    alert("¡Asistencia guardada correctamente! 💜");
+}
+
+// Guardar en el celular
+function guardar() {
+    localStorage.setItem(
+        "misAsistencias",
+        JSON.stringify(registros)
+    );
+}
+
+// Mostrar historial
+function mostrar() {
+
+    let historial = document.getElementById("historial");
+    let buscar = document.getElementById("buscar")
+        .value.toLowerCase();
+
+    let lista = registros.filter(r =>
+        r.nombre.toLowerCase().includes(buscar)
+    );
+
+    historial.innerHTML = "";
+
+    if (lista.length === 0) {
+        historial.innerHTML =
+            "<p>No hay asistencias registradas.</p>";
+        return;
+    }
+
+    lista.slice().reverse().forEach(r => {
+
+        historial.innerHTML += `
+        <div class="tarjeta">
+
+            <p><b>Trabajador:</b> ${escapar(r.nombre)}</p>
+
+            <p><b>Fecha:</b> ${r.fecha}</p>
+
+            <p><b>Entrada:</b> ${r.entrada || "No registrada"}</p>
+
+            <p><b>Salida:</b> ${r.salida || "No registrada"}</p>
+
+            <p class="estado">
+                Estado: ${r.estado}
+            </p>
+
+            <button class="eliminar"
+            onclick="eliminar(${r.id})">
+                Eliminar registro
+            </button>
+
+        </div>
+        `;
+    });
+}
+
+// Proteger texto ingresado
+function escapar(texto) {
+    return texto.replace(/[&<>"']/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    }[c]));
+}
+
+// Eliminar registro
+function eliminar(id) {
+
+    if (confirm("¿Deseas eliminar este registro?")) {
+
+        registros = registros.filter(r =>
+            r.id !== id
+        );
+
+        guardar();
+        mostrar();
+    }
+}
+
+// Limpiar campos
+function limpiar() {
+
+    document.getElementById("nombre").value = "";
+    document.getElementById("entrada").value = "";
+    document.getElementById("salida").value = "";
+    document.getElementById("estado").value = "Presente";
+}
+
+// Mostrar al iniciar
+mostrar();
+
+</script>
+
+</body>
+</html>
